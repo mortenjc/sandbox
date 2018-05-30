@@ -1,0 +1,11 @@
+#!/bin/bash
+
+repos=$(find . -type d -mindepth 1 -maxdepth 1)
+
+for repo in $repos
+do
+   pushd $repo &> /dev/null
+      echo Labels in repo $repo
+      ghi label 2>/dev/null
+   popd &>/dev/null
+done

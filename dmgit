@@ -1,0 +1,79 @@
+#!/bin/bash
+
+function errexit()
+{
+   echo "error: "$1
+   exit 1
+}
+
+function dmgit_status()
+{
+    git branch 2>/dev/null
+    git status -s
+}
+
+function dmgit_create_labels()
+{
+    echo creating labels
+    ghi label "Type 1 - BUG"                -c FF0000
+    ghi label "Type 2 - Feature"            -c E83D0F
+    ghi label "Type 3 - Enhancement"        -c E8850F
+    ghi label "Prio 1 - must have"          -c C7DEF8
+    ghi label "Prio 2 - should have"        -c 20B4E5
+    ghi label "Prio 3 - could have"         -c 208FE5
+    ghi label "Prio 4 - won't have"         -c 0052CC
+    ghi label "Status - duplicate"          -c 333333
+    ghi label "Status - workable"           -c EDEDED
+    ghi label "Status - in progress"        -c EDEDED
+    ghi label "Status - up next"            -c EEEEEE
+}
+
+function dmgit_remove()
+{
+    if [[ $1 == "" ]]
+    then
+       errexit "missing branch argument for remove"
+    fi
+    git branch -d $1
+}
+
+git branch &>/dev/null || errexit "no git repo"
+
+case "$1" in
+
+    help)
+        echo "Usage: dmgit {labels|create-labels|remove-labels|status|issues|merged|remove}"
+        ;;
+
+    labels)
+        ghi label
+        ;;
+
+    create-labels)
+        dmgit_create_labels
+        ;;
+
+    remove-labels)
+        ghi label -l | sed "s/\'/\\\'/g" | xargs -I %lb sh -c 'ghi label -D "%lb"'
+        ;;
+
+    status)
+        dmgit_status
+        ;;
+
+    issues)
+        ghi
+        ;;
+
+    merged)
+        git branch --merged
+        ;;
+
+    remove)
+        dmgit_remove $2
+        ;;
+
+    *)
+        dmgit_status
+        ;;
+esac
