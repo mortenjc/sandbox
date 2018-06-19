@@ -1,40 +1,37 @@
 #include <DirScan.h>
-#include <dirent.h>
 #include <cinttypes>
 #include <string.h>
 
 
-void DirScan::listdir(const char *name, int indent)
-{
-    DIR *dir;
-    struct dirent *entry;
+void DirScan::listdir(std::string &name, std::string &filter) {
+  DirState state;
 
-    if (!(dir = opendir(name)))
-        return;
+  if (!(state.dir = opendir(name.c_str())))
+    return;
 
-    while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_DIR) {
-            char path[1024];
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0 || entry->d_name[0] == '.')
-                continue;
-            stats.directories++;
-            snprintf(path, sizeof(path), "%s/%s", name, entry->d_name);
-            printf("%*s[%s]\n", indent, "", entry->d_name);
-            listdir(path, indent + 2);
-        } else {
-            stats.files++;
-            if (strstr(entry->d_name, ".pdf") != NULL) {
-              stats.matchedfiles++;
-              printf("%*s- %s\n", indent, "", entry->d_name);
-            }
-        }
+  while ((state.entry = readdir(state.dir)) != NULL) {
+    if (state.isDirectory()) {
+      if (strcmp(state.entry->d_name, ".") == 0 || strcmp(state.entry->d_name, "..") == 0 || state.entry->d_name[0] == '.') {
+          continue;
+      }
+      stats.directories++;
+      auto dirname = name + "/" + state.entry->d_name;
+      listdir(dirname, filter);
+    } else {
+      stats.files++;
+      auto filename = name + "/" + state.entry->d_name;
+      if (filename.find(filter) != std::string::npos) {
+        stats.matchedfiles++;
+        printf("%s\n", filename.c_str());
+      }
     }
-    closedir(dir);
-
+  }
+  closedir(state.dir);
 }
 
-DirScan::DirScan(std::string rootDir) {
-    listdir(rootDir.c_str(), 4);
+
+DirScan::DirScan(std::string rootDir, std::string filter) {
+    listdir(rootDir, filter);
     printf("directories  : %" PRIu64 "\n", stats.directories);
     printf("total files  : %" PRIu64 "\n", stats.files);
     printf("matched files: %" PRIu64 "\n", stats.matchedfiles);
