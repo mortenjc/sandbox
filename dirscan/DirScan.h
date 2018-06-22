@@ -18,10 +18,17 @@ public:
 class DirScan {
 public:
 
-  DirScan(std::string rootDir, std::string filter);
+  DirScan(std::string & rootDir, std::string & initialFilter);
+
+  void findSubStr(std::string needle);
+
+  void searchLoop();
 
 private:
-  void listdir(std::string &name, std::string &filter);
+  void listdir(std::string name, std::string filter);
+
+  bool filterdir(char * d_name);
 
   struct stats_t stats;
+  std::set<std::string> files;
 };
