@@ -2,6 +2,7 @@
 #include <cinttypes>
 #include <iostream>
 #include <string.h>
+#include <vector>
 
 
 ///
@@ -43,15 +44,34 @@ void DirScan::listdir(std::string name, std::string filter) {
 
 ///
 ///
-void DirScan::findSubStr(std::string needle) {
+uint64_t DirScan::findSubStr(std::string needle) {
   uint64_t count{0};
-  for (auto & string : files) {
-    if (string.find(needle) != std::string::npos) {
+  for (auto & file : files) {
+    if (file.find(needle) != std::string::npos) {
       count++;
-      printf("%s\n", string.c_str());
+      printf("%s\n", file.c_str());
     }
   }
-  printf("found %" PRIu64 " occurances of %s\n", count, needle.c_str());
+  return count;
+}
+
+///
+///
+uint64_t  DirScan::findSubStr(std::vector<std::string> needles) {
+  uint64_t count{0};
+  for (auto file : files) {
+    bool match{true};
+    for (auto & needle : needles) {
+       match = match && (file.find(needle) != std::string::npos);
+    }
+    if (match) {
+      count++;
+      if (printNames) {
+        printf("%s\n", file.c_str());
+      }
+    }
+  }
+  return count;
 }
 
 ///
@@ -61,10 +81,18 @@ void DirScan::searchLoop() {
     while (true) {
       std::cout << "search string (quit)> ";
       std::getline(std::cin, command);
+      std::vector<std::string> tokens;
+      char *chars_array = strtok((char *)command.c_str(), "\n ");
+      while (chars_array) {
+        std::string token(chars_array);
+        tokens.push_back(token);
+        chars_array = strtok(NULL, "\n ");
+      }
       if (command.empty() or command == "quit") {
         break;
       }
-      findSubStr(command);
+      auto res = findSubStr(tokens);
+      printf("found %" PRIu64 " occurances of %s\n", res, command.c_str());
     };
 }
 

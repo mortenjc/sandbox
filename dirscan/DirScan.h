@@ -20,9 +20,13 @@ public:
 
   DirScan(std::string & rootDir, std::string & initialFilter);
 
-  void findSubStr(std::string needle);
+  uint64_t findSubStr(std::string needle);
+
+  uint64_t findSubStr(std::vector<std::string> needles);
 
   void searchLoop();
+
+  void printNamesOn() {printNames=true;}
 
 private:
   void listdir(std::string name, std::string filter);
@@ -31,4 +35,5 @@ private:
 
   struct stats_t stats;
   std::set<std::string> files;
+  bool printNames{false};
 };

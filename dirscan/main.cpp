@@ -14,6 +14,7 @@ int main(int argc, char * argv[]){
 
   DirScan essproj(rootDir, initialFilter);
 
+  essproj.printNamesOn();
   essproj.searchLoop();
 
   return 0;
