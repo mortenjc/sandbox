@@ -1,6 +1,16 @@
 #include <dirent.h>
 #include <string>
-#include <set>
+#include <vector>
+#include <AppSettings.h>
+
+class DirEntry {
+public:
+  DirEntry(std::string dir, std::string file) : Dir(dir), File(file) {}
+  void print() { printf("%s %s\n", Dir.c_str(), File.c_str());}
+private:
+  std::string Dir;
+  std::string File;
+};
 
 struct stats_t {
   uint64_t directories{0};
@@ -18,22 +28,18 @@ public:
 class DirScan {
 public:
 
-  DirScan(std::string & rootDir, std::string & initialFilter);
+  DirScan(AppSettings & settings);
 
-  uint64_t findSubStr(std::string needle);
+  static void removeLastSlash(std::string &str);
 
-  uint64_t findSubStr(std::vector<std::string> needles);
-
-  void searchLoop();
-
-  void printNamesOn() {printNames=true;}
+  std::vector<DirEntry> getFiles() {return files;}
 
 private:
-  void listdir(std::string name, std::string filter);
+  AppSettings Settings;
+  void listdir(std::string name);
 
   bool filterdir(char * d_name);
 
   struct stats_t stats;
-  std::set<std::string> files;
-  bool printNames{false};
+  std::vector<DirEntry> files;
 };
