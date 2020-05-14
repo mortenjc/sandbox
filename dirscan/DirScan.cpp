@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string.h>
 #include <vector>
-
+#include <CLI11.hpp>
 
 ///
 ///
@@ -13,93 +13,53 @@ bool DirScan::filterdir(char * d_name) {
           d_name[0] == '.');
 }
 
+void DirScan::removeLastSlash(std::string &str) {
+  if (str.back() == '/') {
+    str.pop_back();
+  }
+}
+
 ///
 ///
-void DirScan::listdir(std::string name, std::string filter) {
+void DirScan::listdir(std::string name) {
   DirState state;
 
   if (!(state.dir = opendir(name.c_str())))
     return;
 
   while ((state.entry = readdir(state.dir)) != NULL) {
+    // Ignore . .. and hidden dirs .*
     if (state.isDirectory()) {
       if (filterdir(state.entry->d_name)) {
           continue;
       }
+      //printf("DEBUG: readdir: %s\n", state.entry->d_name);
       stats.directories++;
+
       auto dirname = name + "/" + state.entry->d_name;
-      listdir(dirname, filter);
+      listdir(dirname);
     } else {
       stats.files++;
+      auto e = new DirEntry(name, state.entry->d_name);
       auto filename = name + "/" + state.entry->d_name;
-      if (filename.find(filter) != std::string::npos) {
-        stats.matchedfiles++;
-        files.insert(filename);
-        //printf("%s\n", filename.c_str());
+
+      stats.matchedfiles++;
+      files.push_back(*e);
+      if (Settings.Verbose) {
+        e->print();
       }
     }
   }
   closedir(state.dir);
 }
 
-///
-///
-uint64_t DirScan::findSubStr(std::string needle) {
-  uint64_t count{0};
-  for (auto & file : files) {
-    if (file.find(needle) != std::string::npos) {
-      count++;
-      printf("%s\n", file.c_str());
-    }
-  }
-  return count;
-}
 
-///
-///
-uint64_t  DirScan::findSubStr(std::vector<std::string> needles) {
-  uint64_t count{0};
-  for (auto file : files) {
-    bool match{true};
-    for (auto & needle : needles) {
-       match = match && (file.find(needle) != std::string::npos);
-    }
-    if (match) {
-      count++;
-      if (printNames) {
-        printf("%s\n", file.c_str());
-      }
-    }
-  }
-  return count;
-}
-
-///
-///
-void DirScan::searchLoop() {
-    std::string command;
-    while (true) {
-      std::cout << "search string (quit)> ";
-      std::getline(std::cin, command);
-      std::vector<std::string> tokens;
-      char *chars_array = strtok((char *)command.c_str(), "\n ");
-      while (chars_array) {
-        std::string token(chars_array);
-        tokens.push_back(token);
-        chars_array = strtok(NULL, "\n ");
-      }
-      if (command.empty() or command == "quit") {
-        break;
-      }
-      auto res = findSubStr(tokens);
-      printf("found %" PRIu64 " occurances of %s\n", res, command.c_str());
-    };
-}
-
-
-DirScan::DirScan(std::string & rootDir, std::string & filter) {
+DirScan::DirScan(AppSettings & settings) : Settings(settings) {
     files.clear();
-    listdir(rootDir, filter);
+    removeLastSlash(Settings.RootDir);
+
+    listdir(Settings.RootDir);
+
     printf("directories  : %" PRIu64 "\n", stats.directories);
     printf("total files  : %" PRIu64 "\n", stats.files);
     printf("matched files: %" PRIu64 "\n", stats.matchedfiles);

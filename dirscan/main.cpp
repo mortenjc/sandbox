@@ -1,21 +1,20 @@
 #include <DirScan.h>
 #include <vector>
+#include <AppSettings.h>
+#include <CLI11.hpp>
+
 
 int main(int argc, char * argv[]){
-  std::string rootDir = ".";
-  std::string initialFilter{""};
+  AppSettings Settings;
+  CLI::App app{"Directory Scanner"};
+  app.add_option("-d", Settings.RootDir, "RootDir");
+  app.add_option("-f", Settings.Filter, "Filter");
+  app.add_flag("-v", Settings.Verbose, "Verbose");
+  CLI11_PARSE(app, argc, argv);
 
-  if (argc == 2) {
-    initialFilter = argv[1];
-  } else if (argc > 2) {
-    rootDir = argv[1];
-    initialFilter = argv[2];
-  }
+  DirScan essproj(Settings);
+  auto files = essproj.getFiles();
 
-  DirScan essproj(rootDir, initialFilter);
-
-  essproj.printNamesOn();
-  essproj.searchLoop();
 
   return 0;
 }
