@@ -6,7 +6,10 @@
 class DirEntry {
 public:
   DirEntry(std::string dir, std::string file) : Dir(dir), File(file) {}
-  void print() { printf("%s %s\n", Dir.c_str(), File.c_str());}
+  void print() { printf("%s %s\n", Dir.c_str(), File.c_str()); }
+
+  std::string & getDir() { return Dir; }
+  std::string & getFile() { return File; }
 private:
   std::string Dir;
   std::string File;

@@ -2,6 +2,7 @@
 #include <vector>
 #include <AppSettings.h>
 #include <CLI11.hpp>
+#include <Album.h>
 
 
 int main(int argc, char * argv[]){
@@ -13,8 +14,18 @@ int main(int argc, char * argv[]){
   CLI11_PARSE(app, argc, argv);
 
   DirScan essproj(Settings);
-  auto files = essproj.getFiles();
+  auto Entries = essproj.getFiles();
 
+  Album * AlbumPtr = nullptr;
+  std::vector<Album> Albums;
+  std::string AlbumTitle = "";
+  for (auto Entry : Entries) {
+    if (Entry.getDir() != AlbumTitle) {
+      AlbumTitle = Entry.getDir();
+      AlbumPtr = new Album(AlbumTitle);
+    }
+    AlbumPtr->addFile(Entry.getFile());
+  }
 
   return 0;
 }

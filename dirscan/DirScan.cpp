@@ -1,11 +1,21 @@
+
+#include <CLI11.hpp>
 #include <DirScan.h>
 #include <cinttypes>
 #include <iostream>
-#include <string.h>
-#include <vector>
-#include <CLI11.hpp>
 
-///
+
+DirScan::DirScan(AppSettings & settings) : Settings(settings) {
+    files.clear();
+    removeLastSlash(Settings.RootDir);
+
+    listdir(Settings.RootDir);
+
+    printf("directories  : %" PRIu64 "\n", stats.directories);
+    printf("total files  : %" PRIu64 "\n", stats.files);
+}
+
+
 ///
 bool DirScan::filterdir(char * d_name) {
   return (strcmp(d_name, ".") == 0  ||
@@ -13,13 +23,14 @@ bool DirScan::filterdir(char * d_name) {
           d_name[0] == '.');
 }
 
+///
 void DirScan::removeLastSlash(std::string &str) {
   if (str.back() == '/') {
     str.pop_back();
   }
 }
 
-///
+
 ///
 void DirScan::listdir(std::string name) {
   DirState state;
@@ -40,27 +51,14 @@ void DirScan::listdir(std::string name) {
       listdir(dirname);
     } else {
       stats.files++;
-      auto e = new DirEntry(name, state.entry->d_name);
-      auto filename = name + "/" + state.entry->d_name;
+      DirEntry entry(name, state.entry->d_name);
 
-      stats.matchedfiles++;
-      files.push_back(*e);
+      files.push_back(entry);
+
       if (Settings.Verbose) {
-        e->print();
+        entry.print();
       }
     }
   }
   closedir(state.dir);
-}
-
-
-DirScan::DirScan(AppSettings & settings) : Settings(settings) {
-    files.clear();
-    removeLastSlash(Settings.RootDir);
-
-    listdir(Settings.RootDir);
-
-    printf("directories  : %" PRIu64 "\n", stats.directories);
-    printf("total files  : %" PRIu64 "\n", stats.files);
-    printf("matched files: %" PRIu64 "\n", stats.matchedfiles);
 }
